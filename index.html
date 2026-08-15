@@ -25,6 +25,14 @@
             cursor: none;
         }
 
+        /* En móvil el cursor personalizado no aplica */
+        @media (pointer: coarse) {
+            body, html { cursor: auto; }
+            #cursor { display: none; }
+            #btn-barajar { cursor: pointer; }
+            #btn-nueva-lectura { cursor: pointer; }
+        }
+
         canvas {
             position: fixed;
             top: 0;
@@ -226,10 +234,12 @@
             display: none;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             gap: 24px;
             overflow-y: auto;
-            padding: 30px 20px;
+            overflow-x: hidden;
+            padding: 30px 20px 50px;
+            -webkit-overflow-scrolling: touch;
         }
 
         #pantalla-cartas h2 {
@@ -249,6 +259,16 @@
             justify-content: center;
             gap: 30px;
             max-width: 1600px;
+            width: 100%;
+        }
+
+        /* Columna de cada carta (wrapper + info) */
+        .carta-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 36px;
+            width: 280px;
         }
 
         .carta-wrapper {
@@ -369,7 +389,7 @@
         /* ── INFO DE LA CARTA ── */
         .carta-info {
             margin-top: 14px;
-            width: 280px;
+            width: 100%;
             background: rgba(255,255,255,0.04);
             border: 1px solid #c77dff33;
             border-radius: 12px;
@@ -415,6 +435,90 @@
             font-size: 0.78rem;
             color: rgba(255,255,255,0.75);
             line-height: 1.6;
+        }
+
+        /* ── RESPONSIVO MÓVIL ── */
+        @media (max-width: 600px) {
+            #pantalla-inicio {
+                gap: 20px;
+                padding: 0 24px;
+            }
+
+            #btn-barajar {
+                font-size: 1rem;
+                padding: 14px 32px;
+            }
+
+            #pantalla-cartas {
+                padding: 20px 12px 60px;
+                gap: 16px;
+            }
+
+            /* Grid de 2 columnas en móvil */
+            #cartas-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                justify-items: center;
+            }
+
+            /* Última carta (la 5ª) ocupa las 2 columnas y queda centrada */
+            #cartas-grid .carta-col:last-child:nth-child(odd) {
+                grid-column: 1 / -1;
+            }
+
+            .carta-col {
+                width: 100%;
+                margin-top: 28px;
+            }
+
+            .carta-wrapper {
+                width: 100%;
+            }
+
+            .carta-inner {
+                width: 100%;
+                /* Proporción tarot ≈ 0.58 → height = width / 0.58 → usar aspect-ratio */
+                height: 0;
+                padding-bottom: 172%; /* aspect ratio de carta tarot */
+            }
+
+            /* Ajuste para backface dentro del aspect-ratio hack */
+            .carta-frente,
+            .carta-dorso {
+                position: absolute;
+                inset: 0;
+            }
+
+            .etiqueta-oculta {
+                font-size: 0.55rem;
+                padding: 4px 10px;
+            }
+
+            #pantalla-concentracion p {
+                font-size: clamp(1.1rem, 4.5vw, 1.6rem);
+                padding: 0 20px;
+            }
+
+            #cuenta-regresiva {
+                font-size: 2rem;
+            }
+        }
+
+        /* Tablets pequeñas */
+        @media (min-width: 601px) and (max-width: 900px) {
+            .carta-col {
+                width: 200px;
+            }
+
+            .carta-wrapper {
+                width: 200px;
+            }
+
+            .carta-inner {
+                width: 200px;
+                height: 340px;
+            }
         }
     </style>
 </head>
@@ -591,7 +695,8 @@
 
             // Construir grid
             cartasGrid.innerHTML = '';
-            const indiceMedio = Math.floor(cartas.length / 2);
+            const isMobile = window.innerWidth <= 600;
+            const indiceMedio = isMobile ? cartas.length - 1 : Math.floor(cartas.length / 2);
 
             cartas.forEach((carta, idx) => {
                 const esMedio = (idx === indiceMedio);
@@ -599,10 +704,7 @@
 
                 // Wrapper con columna (carta + info)
                 const col = document.createElement('div');
-                col.style.display = 'flex';
-                col.style.flexDirection = 'column';
-                col.style.alignItems = 'center';
-                col.style.marginTop = '36px'; // espacio para la etiqueta
+                col.className = 'carta-col';
 
                 const wrapper = document.createElement('div');
                 wrapper.className = 'carta-wrapper' + (esMedio ? ' oculta' : '');
