@@ -1,21 +1,28 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tarot Místico</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Raleway:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Raleway:wght@300;400&display=swap"
+        rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-        body, html {
+        body,
+        html {
             width: 100%;
             height: 100%;
             overflow: hidden;
             background-color: #0d0620;
             font-family: 'Raleway', sans-serif;
             color: white;
-            cursor: none; /* Ocultamos el cursor normal */
+            cursor: none;
         }
 
         canvas {
@@ -27,7 +34,6 @@
             z-index: 1;
         }
 
-        /* Cursor personalizado */
         #cursor {
             position: fixed;
             width: 12px;
@@ -38,19 +44,20 @@
             z-index: 999;
             transform: translate(-50%, -50%);
             box-shadow: 0 0 12px #c77dff, 0 0 24px #9b59b6;
-            transition: transform 0.08s ease;
         }
 
-        .content {
+        /* ── PANTALLA PRINCIPAL ── */
+        #pantalla-inicio {
             position: fixed;
             z-index: 10;
             width: 100%;
-            top: 0;
+            height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-top: 8vh;
-            pointer-events: none;
+            justify-content: center;
+            gap: 30px;
+            transition: opacity 0.8s ease;
         }
 
         .subtitle {
@@ -60,77 +67,412 @@
             letter-spacing: 0.4em;
             text-transform: uppercase;
             color: #c77dff;
-            margin-bottom: 14px;
             opacity: 0.85;
         }
 
         h1 {
             font-family: 'Cinzel', serif;
-            font-size: clamp(1.4rem, 3.5vw, 2.6rem);
+            font-size: clamp(1.4rem, 3vw, 2.4rem);
             text-align: center;
             padding: 0 20px;
             background: linear-gradient(135deg, #e0aaff, #ffffff, #c77dff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            text-shadow: none;
             filter: drop-shadow(0 0 18px rgba(199, 125, 255, 0.5));
             animation: floatTitle 5s ease-in-out infinite;
             line-height: 1.4;
         }
 
         .divider {
-            margin-top: 18px;
             width: 120px;
             height: 1px;
             background: linear-gradient(to right, transparent, #c77dff, transparent);
             opacity: 0.7;
         }
 
+        /* ── BOTÓN BARAJEANDO ── */
+        #btn-barajar {
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            letter-spacing: 0.15em;
+            color: #0d0620;
+            background: linear-gradient(135deg, #c77dff, #e0aaff, #9b59b6);
+            border: none;
+            padding: 16px 44px;
+            border-radius: 50px;
+            cursor: none;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 24px #c77dff88, 0 0 60px #9b59b644;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            animation: pulseBtn 3s ease-in-out infinite;
+        }
+
+        #btn-barajar:hover {
+            transform: scale(1.06);
+            box-shadow: 0 0 40px #c77dffbb, 0 0 80px #9b59b666;
+        }
+
+        #btn-barajar::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.35) 50%, transparent 100%);
+            transform: translateX(-100%);
+            transition: transform 0.5s ease;
+        }
+
+        #btn-barajar:hover::after {
+            transform: translateX(100%);
+        }
+
+        @keyframes pulseBtn {
+
+            0%,
+            100% {
+                box-shadow: 0 0 24px #c77dff88, 0 0 60px #9b59b644;
+            }
+
+            50% {
+                box-shadow: 0 0 40px #c77dffcc, 0 0 80px #9b59b666;
+            }
+        }
+
         @keyframes floatTitle {
-            0%, 100% { transform: translateY(0px); }
-            50%       { transform: translateY(-8px); }
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        /* ── PANTALLA DE CONCENTRACIÓN ── */
+        #pantalla-concentracion {
+            position: fixed;
+            z-index: 20;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            background: radial-gradient(ellipse at center, #1a0433 0%, #0d0620 70%);
+        }
+
+        #pantalla-concentracion p {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(1.3rem, 3.5vw, 2.2rem);
+            text-align: center;
+            padding: 0 30px;
+            line-height: 1.7;
+            background: linear-gradient(135deg, #ffffff, #e0aaff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: breathe 2s ease-in-out infinite;
+        }
+
+        .barra-progreso-wrap {
+            width: min(400px, 80vw);
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #barra-progreso {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #9b59b6, #c77dff, #e0aaff);
+            border-radius: 10px;
+            transition: width linear;
+            box-shadow: 0 0 10px #c77dff;
+        }
+
+        #cuenta-regresiva {
+            font-family: 'Cinzel', serif;
+            font-size: 2.5rem;
+            color: #c77dff;
+            text-shadow: 0 0 20px #c77dff;
+            animation: breathe 1s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.7;
+                transform: scale(1.04);
+            }
+        }
+
+        /* ── PANTALLA DE CARTAS ── */
+        #pantalla-cartas {
+            position: fixed;
+            z-index: 20;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            overflow-y: auto;
+            padding: 30px 20px;
+        }
+
+        #pantalla-cartas h2 {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(1.1rem, 2.5vw, 1.8rem);
+            background: linear-gradient(135deg, #e0aaff, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 12px #c77dff88);
+            text-align: center;
+        }
+
+        #cartas-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            max-width: 1600px;
+        }
+
+        .carta-wrapper {
+            perspective: 1200px;
+            width: 280px;
+            position: relative;
+        }
+
+        .carta-inner {
+            width: 280px;
+            height: 480px;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateY(180deg);
+            transition: transform 0.9s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        /* Carta revelada normal */
+        .carta-inner.revelada {
+            transform: rotateY(0deg);
+        }
+
+        /* Carta revelada e invertida (girada 180deg) */
+        .carta-inner.revelada.invertida {
+            transform: rotateY(0deg) rotate(180deg);
+        }
+
+        .carta-frente,
+        .carta-dorso {
+            position: absolute;
+            inset: 0;
+            border-radius: 14px;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        .carta-frente img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 14px;
+            box-shadow: 0 0 24px #c77dff66, 0 10px 40px rgba(0, 0, 0, 0.7);
+        }
+
+        .carta-dorso {
+            background: linear-gradient(135deg, #1a0433, #2d0b4e);
+            border: 2px solid #c77dff44;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: rotateY(180deg);
+            box-shadow: 0 0 20px #c77dff44;
+            font-size: 3rem;
+        }
+
+        /* ── CARTA OCULTA (la del medio) ── */
+        .carta-wrapper.oculta .carta-frente img {
+            box-shadow: 0 0 30px #ffffffaa, 0 0 60px #c77dffcc, 0 10px 40px rgba(0,0,0,0.7);
+        }
+
+        .carta-wrapper.oculta .carta-inner.revelada {
+            outline: 3px solid #e0aaff;
+            outline-offset: 4px;
+            border-radius: 14px;
+        }
+
+        .etiqueta-oculta {
+            display: none;
+            position: absolute;
+            top: -32px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(90deg, #9b59b6, #c77dff);
+            color: white;
+            font-family: 'Cinzel', serif;
+            font-size: 0.6rem;
+            letter-spacing: 0.18em;
+            padding: 5px 14px;
+            border-radius: 20px;
+            white-space: nowrap;
+            box-shadow: 0 0 16px #c77dffaa;
+            z-index: 5;
+            text-transform: uppercase;
+        }
+
+        .carta-wrapper.oculta .etiqueta-oculta {
+            display: block;
+        }
+
+        #btn-nueva-lectura {
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            color: #c77dff;
+            background: transparent;
+            border: 1px solid #c77dff66;
+            padding: 12px 32px;
+            border-radius: 50px;
+            cursor: none;
+            letter-spacing: 0.1em;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+            margin-top: 8px;
+        }
+
+        #btn-nueva-lectura:hover {
+            background: rgba(199, 125, 255, 0.15);
+            border-color: #c77dff;
+            box-shadow: 0 0 20px #c77dff44;
+        }
+
+        /* Ocultar/mostrar con fade */
+        .fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* ── INFO DE LA CARTA ── */
+        .carta-info {
+            margin-top: 14px;
+            width: 280px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid #c77dff33;
+            border-radius: 12px;
+            padding: 14px 16px;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.5s ease 0.3s, transform 0.5s ease 0.3s;
+            backdrop-filter: blur(6px);
+        }
+
+        .carta-info.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .carta-info .nombre-carta {
+            font-family: 'Cinzel', serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #e0aaff;
+            margin-bottom: 4px;
+            letter-spacing: 0.05em;
+        }
+
+        .carta-info .posicion-carta {
+            font-family: 'Raleway', sans-serif;
+            font-size: 0.65rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .carta-info .posicion-carta.normal {
+            color: #a8edba;
+        }
+
+        .carta-info .posicion-carta.invertida {
+            color: #ffb3b3;
+        }
+
+        .carta-info .texto-significado {
+            font-family: 'Raleway', sans-serif;
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.75);
+            line-height: 1.6;
         }
     </style>
 </head>
+
 <body>
 
     <canvas id="canvas"></canvas>
     <div id="cursor"></div>
 
-    <div class="content">
+    <!-- PANTALLA 1: Inicio -->
+    <div id="pantalla-inicio">
         <p class="subtitle">✦ Portal de los Arcanos ✦</p>
         <h1>"El universo habla a través de las cartas,<br>escucha lo que tu alma ya sabe"</h1>
         <div class="divider"></div>
+        <button id="btn-barajar" onclick="iniciarBaraje()">Barajeando</button>
+    </div>
+
+    <!-- PANTALLA 2: Concentración -->
+    <div id="pantalla-concentracion">
+        <p>Piensa muy fuerte en tu pregunta,<br>no pares de pensarla</p>
+        <div id="cuenta-regresiva">10</div>
+        <div class="barra-progreso-wrap">
+            <div id="barra-progreso"></div>
+        </div>
+    </div>
+
+    <!-- PANTALLA 3: Cartas reveladas -->
+    <div id="pantalla-cartas">
+        <h2>✦ Las cartas han hablado ✦</h2>
+        <div id="cartas-grid"></div>
+        <button id="btn-nueva-lectura" onclick="volver()">↩ Nueva lectura</button>
     </div>
 
     <script>
-        // ── Canvas & contexto ──────────────────────────────────────────
+        // ══════════════════════════════════════════════
+        //  CANVAS: estrellas + estela de partículas
+        // ══════════════════════════════════════════════
         const canvas = document.getElementById('canvas');
-        const ctx    = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d');
         const cursor = document.getElementById('cursor');
-
         let W, H, stars = [], particles = [];
         let mouse = { x: -200, y: -200 };
 
-        // ── Resize ────────────────────────────────────────────────────
         function resize() {
-            W = canvas.width  = window.innerWidth;
+            W = canvas.width = window.innerWidth;
             H = canvas.height = window.innerHeight;
             initStars();
         }
 
-        // ── Estrellas ─────────────────────────────────────────────────
         function initStars() {
             stars = [];
             const n = Math.floor(W * H / 1800);
             for (let i = 0; i < n; i++) {
                 stars.push({
-                    x:     Math.random() * W,
-                    y:     Math.random() * H,
-                    r:     Math.random() * 1.3 + 0.2,
+                    x: Math.random() * W, y: Math.random() * H,
+                    r: Math.random() * 1.3 + 0.2,
                     alpha: Math.random(),
-                    da:    (Math.random() * 0.008 + 0.003) * (Math.random() < 0.5 ? 1 : -1)
+                    da: (Math.random() * 0.008 + 0.003) * (Math.random() < 0.5 ? 1 : -1)
                 });
             }
         }
@@ -146,85 +488,205 @@
             });
         }
 
-        // ── Partículas de estela ───────────────────────────────────────
         class Particle {
             constructor(x, y) {
-                this.x     = x;
-                this.y     = y;
-                this.r     = Math.random() * 3 + 1;
+                this.x = x; this.y = y;
+                this.r = Math.random() * 3 + 1;
                 this.alpha = 0.9;
-                this.vx    = (Math.random() - 0.5) * 0.6;
-                this.vy    = (Math.random() - 0.5) * 0.6 - 0.4;
-                // Colores mágicos: morado, violeta, dorado suave
-                const palette = [
-                    `rgba(224,170,255,`,
-                    `rgba(199,125,255,`,
-                    `rgba(155, 89,182,`,
-                    `rgba(255,215,180,`,
-                    `rgba(255,255,255,`
-                ];
-                this.color = palette[Math.floor(Math.random() * palette.length)];
+                this.vx = (Math.random() - 0.5) * 0.6;
+                this.vy = (Math.random() - 0.5) * 0.6 - 0.4;
+                const p = ['rgba(224,170,255,', 'rgba(199,125,255,', 'rgba(155,89,182,', 'rgba(255,255,255,'];
+                this.color = p[Math.floor(Math.random() * p.length)];
             }
-            update() {
-                this.x     += this.vx;
-                this.y     += this.vy;
-                this.alpha -= 0.045;
-                this.r     *= 0.97;
-            }
+            update() { this.x += this.vx; this.y += this.vy; this.alpha -= 0.045; this.r *= 0.97; }
             draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
                 ctx.fillStyle = this.color + this.alpha + ')';
-                ctx.shadowBlur  = 8;
-                ctx.shadowColor = '#c77dff';
-                ctx.fill();
-                ctx.shadowBlur = 0;
+                ctx.shadowBlur = 8; ctx.shadowColor = '#c77dff'; ctx.fill(); ctx.shadowBlur = 0;
             }
             get dead() { return this.alpha <= 0 || this.r < 0.3; }
         }
 
-        // ── Bucle de animación ─────────────────────────────────────────
         function animate() {
             ctx.clearRect(0, 0, W, H);
-
             drawStars();
-
-            // Partículas
             particles = particles.filter(p => !p.dead);
             particles.forEach(p => { p.update(); p.draw(); });
-
             requestAnimationFrame(animate);
         }
 
-        // ── Eventos ───────────────────────────────────────────────────
         window.addEventListener('resize', resize);
-
         window.addEventListener('mousemove', e => {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
-
-            // Mover cursor personalizado
+            mouse.x = e.clientX; mouse.y = e.clientY;
             cursor.style.left = mouse.x + 'px';
-            cursor.style.top  = mouse.y + 'px';
-
-            // Añadir 2-3 partículas por movimiento (estela corta y suave)
-            const count = Math.floor(Math.random() * 2) + 1;
-            for (let i = 0; i < count; i++) {
-                particles.push(new Particle(mouse.x, mouse.y));
-            }
-            // Límite máximo para no sobrecargar
+            cursor.style.top = mouse.y + 'px';
+            const c = Math.floor(Math.random() * 2) + 1;
+            for (let i = 0; i < c; i++) particles.push(new Particle(mouse.x, mouse.y));
             if (particles.length > 120) particles.splice(0, particles.length - 120);
-        });
-
-        window.addEventListener('touchmove', e => {
-            const t = e.touches[0];
-            mouse.x = t.clientX;
-            mouse.y = t.clientY;
-            particles.push(new Particle(mouse.x, mouse.y));
         });
 
         resize();
         animate();
+
+        // ══════════════════════════════════════════════
+        //  FLUJO DE LECTURA
+        // ══════════════════════════════════════════════
+        const pantInicio = document.getElementById('pantalla-inicio');
+        const pantConcentracion = document.getElementById('pantalla-concentracion');
+        const pantCartas = document.getElementById('pantalla-cartas');
+        const cuentaEl = document.getElementById('cuenta-regresiva');
+        const barraEl = document.getElementById('barra-progreso');
+        const cartasGrid = document.getElementById('cartas-grid');
+
+        function iniciarBaraje() {
+            // Ocultar inicio
+            pantInicio.style.opacity = '0';
+            pantInicio.style.pointerEvents = 'none';
+
+            setTimeout(() => {
+                pantInicio.style.display = 'none';
+
+                // Mostrar pantalla concentración
+                pantConcentracion.style.display = 'flex';
+                pantConcentracion.style.opacity = '0';
+                requestAnimationFrame(() => {
+                    pantConcentracion.style.transition = 'opacity 0.6s ease';
+                    pantConcentracion.style.opacity = '1';
+                });
+
+                // Barra y cuenta atrás
+                const TOTAL = 10;
+                let restante = TOTAL;
+                cuentaEl.textContent = restante;
+                barraEl.style.transition = 'none';
+                barraEl.style.width = '0%';
+
+                requestAnimationFrame(() => {
+                    barraEl.style.transition = `width ${TOTAL}s linear`;
+                    barraEl.style.width = '100%';
+                });
+
+                const tick = setInterval(() => {
+                    restante--;
+                    cuentaEl.textContent = restante;
+                    if (restante <= 0) {
+                        clearInterval(tick);
+                        mostrarCartas();
+                    }
+                }, 1000);
+
+            }, 700);
+        }
+
+        async function mostrarCartas() {
+            // Ocultar concentración
+            pantConcentracion.style.transition = 'opacity 0.6s ease';
+            pantConcentracion.style.opacity = '0';
+            await sleep(600);
+            pantConcentracion.style.display = 'none';
+
+            // Pedir cartas al servidor
+            const resp = await fetch('/cartas');
+            const cartas = await resp.json();
+
+            // Construir grid
+            cartasGrid.innerHTML = '';
+            const indiceMedio = Math.floor(cartas.length / 2);
+
+            cartas.forEach((carta, idx) => {
+                const esMedio = (idx === indiceMedio);
+                const estaInvertida = carta.invertida;
+
+                // Wrapper con columna (carta + info)
+                const col = document.createElement('div');
+                col.style.display = 'flex';
+                col.style.flexDirection = 'column';
+                col.style.alignItems = 'center';
+                col.style.marginTop = '36px'; // espacio para la etiqueta
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'carta-wrapper' + (esMedio ? ' oculta' : '');
+
+                const etiqueta = document.createElement('span');
+                etiqueta.className = 'etiqueta-oculta';
+                etiqueta.textContent = '✦ Esta es la oculta ✦';
+                wrapper.appendChild(etiqueta);
+
+                const inner = document.createElement('div');
+                inner.className = 'carta-inner';
+                inner.dataset.invertida = estaInvertida ? '1' : '0';
+
+                const frente = document.createElement('div');
+                frente.className = 'carta-frente';
+                const img = document.createElement('img');
+                img.src = `/imagenes_cartas/${carta.archivo}`;
+                img.alt = carta.nombre;
+                frente.appendChild(img);
+
+                const dorso = document.createElement('div');
+                dorso.className = 'carta-dorso';
+                dorso.textContent = '🔮';
+
+                inner.appendChild(frente);
+                inner.appendChild(dorso);
+                wrapper.appendChild(inner);
+                col.appendChild(wrapper);
+
+                // Panel de significado (oculto al inicio)
+                const info = document.createElement('div');
+                info.className = 'carta-info';
+                const palo = carta.palo && carta.palo !== 'Arcano Mayor' ? ` · ${carta.palo}` : '';
+                info.innerHTML = `
+                    <div class="nombre-carta">${carta.nombre}${carta.numero ? ' (' + carta.numero + ')' : ''}${palo}</div>
+                    <div class="posicion-carta ${estaInvertida ? 'invertida' : 'normal'}">
+                        ${estaInvertida ? '↓ Invertida' : '↑ Normal'}
+                    </div>
+                    <div class="texto-significado">${carta.significado}</div>
+                `;
+                col.appendChild(info);
+                cartasGrid.appendChild(col);
+            });
+
+            // Mostrar pantalla cartas
+            pantCartas.style.display = 'flex';
+            pantCartas.style.opacity = '0';
+            requestAnimationFrame(() => {
+                pantCartas.style.transition = 'opacity 0.6s ease';
+                pantCartas.style.opacity = '1';
+            });
+
+            // Revelar cartas una a una con retraso
+            const inners = cartasGrid.querySelectorAll('.carta-inner');
+            const infos  = cartasGrid.querySelectorAll('.carta-info');
+            inners.forEach((inner, i) => {
+                setTimeout(() => {
+                    inner.classList.add('revelada');
+                    if (inner.dataset.invertida === '1') inner.classList.add('invertida');
+                    // Mostrar info con un pequeño retraso adicional
+                    setTimeout(() => infos[i].classList.add('visible'), 500);
+                }, 400 + i * 400);
+            });
+        }
+
+        function volver() {
+            // Resetear y volver al inicio
+            pantCartas.style.transition = 'opacity 0.5s ease';
+            pantCartas.style.opacity = '0';
+            setTimeout(() => {
+                pantCartas.style.display = 'none';
+                cartasGrid.innerHTML = '';
+                barraEl.style.width = '0%';
+                pantInicio.style.display = 'flex';
+                requestAnimationFrame(() => {
+                    pantInicio.style.transition = 'opacity 0.6s ease';
+                    pantInicio.style.opacity = '1';
+                    pantInicio.style.pointerEvents = 'auto';
+                });
+            }, 500);
+        }
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
     </script>
 </body>
+
 </html>
